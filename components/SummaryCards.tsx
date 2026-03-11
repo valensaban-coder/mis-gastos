@@ -1,5 +1,4 @@
 import { TrendingDown, Hash, Tag } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
 import { formatCurrency, CATEGORY_LABELS } from "@/lib/utils";
 
 interface SummaryCardsProps {
@@ -9,45 +8,40 @@ interface SummaryCardsProps {
 }
 
 export function SummaryCards({ total, count, topCategory }: SummaryCardsProps) {
-  const cards = [
-    {
-      label: "Total del mes",
-      value: formatCurrency(total),
-      icon: TrendingDown,
-      color: "text-emerald-400",
-      bg: "bg-emerald-400/10",
-    },
-    {
-      label: "Gastos registrados",
-      value: count.toString(),
-      icon: Hash,
-      color: "text-blue-400",
-      bg: "bg-blue-400/10",
-    },
-    {
-      label: "Categoría top",
-      value: CATEGORY_LABELS[topCategory] ?? "—",
-      icon: Tag,
-      color: "text-amber-400",
-      bg: "bg-amber-400/10",
-    },
-  ];
-
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-      {cards.map(({ label, value, icon: Icon, color, bg }) => (
-        <Card key={label} className="border-border/50">
-          <CardContent className="p-5 flex items-center gap-4">
-            <div className={`rounded-lg p-3 ${bg}`}>
-              <Icon className={`h-5 w-5 ${color}`} />
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground">{label}</p>
-              <p className={`text-xl font-bold ${color}`}>{value}</p>
-            </div>
-          </CardContent>
-        </Card>
-      ))}
+    <div className="grid grid-cols-3 gap-3">
+      {/* Total */}
+      <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-3 flex flex-col gap-1.5">
+        <div className="flex items-center gap-1.5">
+          <TrendingDown className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
+          <span className="text-[11px] text-emerald-300/70 truncate">Total</span>
+        </div>
+        <p className="text-base sm:text-xl font-bold text-emerald-400 leading-none truncate">
+          {formatCurrency(total)}
+        </p>
+      </div>
+
+      {/* Count */}
+      <div className="rounded-xl border border-blue-500/20 bg-blue-500/5 p-3 flex flex-col gap-1.5">
+        <div className="flex items-center gap-1.5">
+          <Hash className="h-3.5 w-3.5 text-blue-400 shrink-0" />
+          <span className="text-[11px] text-blue-300/70 truncate">Gastos</span>
+        </div>
+        <p className="text-base sm:text-xl font-bold text-blue-400 leading-none">
+          {count}
+        </p>
+      </div>
+
+      {/* Top category */}
+      <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-3 flex flex-col gap-1.5">
+        <div className="flex items-center gap-1.5">
+          <Tag className="h-3.5 w-3.5 text-amber-400 shrink-0" />
+          <span className="text-[11px] text-amber-300/70 truncate">Top cat.</span>
+        </div>
+        <p className="text-base sm:text-xl font-bold text-amber-400 leading-none truncate">
+          {CATEGORY_LABELS[topCategory] ?? "—"}
+        </p>
+      </div>
     </div>
   );
 }

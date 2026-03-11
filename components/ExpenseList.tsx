@@ -20,11 +20,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  formatCurrency,
-  CATEGORY_LABELS,
-  CATEGORY_COLORS,
-} from "@/lib/utils";
+import { formatCurrency, CATEGORY_LABELS, CATEGORY_COLORS } from "@/lib/utils";
 
 export interface Expense {
   id: number;
@@ -53,6 +49,11 @@ const CATEGORIES = [
   "otros",
 ] as const;
 
+function formatDate(dateStr: string) {
+  const d = new Date(dateStr + "T12:00:00");
+  return d.toLocaleDateString("es-AR", { day: "2-digit", month: "short" });
+}
+
 export function ExpenseList({
   expenses,
   loading,
@@ -77,15 +78,10 @@ export function ExpenseList({
     setUpdatingId(null);
   }
 
-  function formatDate(dateStr: string) {
-    const d = new Date(dateStr + "T12:00:00");
-    return d.toLocaleDateString("es-AR", { day: "2-digit", month: "short" });
-  }
-
   return (
     <>
       <Card className="border-border/50">
-        <CardHeader className="pb-3">
+        <CardHeader className="pb-3 px-4">
           <CardTitle className="text-base font-medium flex items-center justify-between">
             <span>Gastos del mes</span>
             <span className="text-xs font-normal text-muted-foreground">
@@ -111,83 +107,82 @@ export function ExpenseList({
               {expenses.map((expense) => (
                 <div
                   key={expense.id}
-                  className="flex items-center gap-3 px-4 py-3 hover:bg-white/[0.02] transition-colors"
+                  className="px-4 py-3 hover:bg-white/[0.02] transition-colors"
                 >
-                  {/* Date */}
-                  <span className="hidden sm:block text-xs text-muted-foreground w-14 shrink-0">
-                    {formatDate(expense.date)}
-                  </span>
-
-                  {/* Source icon */}
-                  <span className="text-muted-foreground shrink-0">
-                    {expense.source === "whatsapp" ? (
-                      <MessageCircle className="h-3.5 w-3.5 text-emerald-500" />
-                    ) : (
-                      <Globe className="h-3.5 w-3.5 text-blue-400" />
-                    )}
-                  </span>
-
-                  {/* Description */}
-                  <span className="flex-1 text-sm truncate">
-                    {expense.description}
-                  </span>
-
-                  {/* Category selector */}
-                  <div className="shrink-0">
-                    {updatingId === expense.id ? (
-                      <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-                    ) : (
-                      <Select
-                        value={expense.category}
-                        onValueChange={(v) =>
-                          handleCategoryChange(expense.id, v)
-                        }
-                      >
-                        <SelectTrigger className="h-7 w-auto gap-1 border-0 bg-transparent text-xs px-2 focus:ring-0 focus:ring-offset-0">
-                          <SelectValue>
-                            <Badge
-                              variant="outline"
-                              style={{
-                                color: CATEGORY_COLORS[expense.category],
-                                borderColor: CATEGORY_COLORS[expense.category] + "40",
-                              }}
-                              className="text-xs font-normal"
-                            >
-                              {CATEGORY_LABELS[expense.category] ??
-                                expense.category}
-                            </Badge>
-                          </SelectValue>
-                        </SelectTrigger>
-                        <SelectContent>
-                          {CATEGORIES.map((cat) => (
-                            <SelectItem key={cat} value={cat}>
-                              {CATEGORY_LABELS[cat]}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    )}
+                  {/* Row 1: source icon + description + amount */}
+                  <div className="flex items-center gap-2">
+                    <span className="shrink-0 mt-0.5">
+                      {expense.source === "whatsapp" ? (
+                        <MessageCircle className="h-3.5 w-3.5 text-emerald-500" />
+                      ) : (
+                        <Globe className="h-3.5 w-3.5 text-blue-400" />
+                      )}
+                    </span>
+                    <span className="flex-1 text-sm font-medium truncate">
+                      {expense.description}
+                    </span>
+                    <span className="text-sm font-bold text-emerald-400 shrink-0">
+                      {formatCurrency(Number(expense.amount))}
+                    </span>
                   </div>
 
-                  {/* Amount */}
-                  <span className="text-sm font-semibold text-emerald-400 shrink-0 min-w-[70px] text-right">
-                    {formatCurrency(Number(expense.amount))}
-                  </span>
+                  {/* Row 2: date + category + delete */}
+                  <div className="flex items-center gap-2 mt-1.5 pl-5">
+                    <span className="text-xs text-muted-foreground shrink-0">
+                      {formatDate(expense.date)}
+                    </span>
 
-                  {/* Delete */}
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-7 w-7 shrink-0 text-muted-foreground hover:text-red-400 hover:bg-red-400/10"
-                    onClick={() => setConfirmId(expense.id)}
-                    disabled={deletingId === expense.id}
-                  >
-                    {deletingId === expense.id ? (
-                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                    ) : (
-                      <Trash2 className="h-3.5 w-3.5" />
-                    )}
-                  </Button>
+                    <div className="flex-1">
+                      {updatingId === expense.id ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
+                      ) : (
+                        <Select
+                          value={expense.category}
+                          onValueChange={(v) =>
+                            handleCategoryChange(expense.id, v)
+                          }
+                        >
+                          <SelectTrigger className="h-6 w-auto gap-1 border-0 bg-transparent p-0 focus:ring-0 focus:ring-offset-0">
+                            <SelectValue>
+                              <Badge
+                                variant="outline"
+                                style={{
+                                  color: CATEGORY_COLORS[expense.category],
+                                  borderColor:
+                                    CATEGORY_COLORS[expense.category] + "50",
+                                }}
+                                className="text-[11px] font-normal px-1.5 py-0"
+                              >
+                                {CATEGORY_LABELS[expense.category] ??
+                                  expense.category}
+                              </Badge>
+                            </SelectValue>
+                          </SelectTrigger>
+                          <SelectContent>
+                            {CATEGORIES.map((cat) => (
+                              <SelectItem key={cat} value={cat}>
+                                {CATEGORY_LABELS[cat]}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+                    </div>
+
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 shrink-0 text-muted-foreground hover:text-red-400 hover:bg-red-400/10"
+                      onClick={() => setConfirmId(expense.id)}
+                      disabled={deletingId === expense.id}
+                    >
+                      {deletingId === expense.id ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <Trash2 className="h-3.5 w-3.5" />
+                      )}
+                    </Button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -195,9 +190,8 @@ export function ExpenseList({
         </CardContent>
       </Card>
 
-      {/* Delete confirmation dialog */}
       <Dialog open={confirmId !== null} onOpenChange={() => setConfirmId(null)}>
-        <DialogContent className="max-w-sm">
+        <DialogContent className="max-w-sm mx-4">
           <DialogHeader>
             <DialogTitle>Eliminar gasto</DialogTitle>
             <DialogDescription>

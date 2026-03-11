@@ -107,34 +107,35 @@ export function AddExpenseForm({ onAdd, onAddManual }: AddExpenseFormProps) {
     <>
       <Card className="border-border/50">
         <CardContent className="p-4">
-          <form onSubmit={handleQuickSubmit} className="flex gap-2">
-            <Input
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              placeholder='Carga rápida: "almuerzo 1500" o "uber 2800"'
-              className="flex-1 bg-background/60"
-              disabled={loadingQuick}
-              autoComplete="off"
-              autoCorrect="off"
-            />
-            <Button type="submit" disabled={loadingQuick || !text.trim()}>
-              {loadingQuick ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Plus className="h-4 w-4" />
-              )}
-              <span className="ml-1 hidden sm:inline">Agregar</span>
-            </Button>
+          <div className="flex gap-2">
             <Button
               type="button"
               variant="outline"
               onClick={() => setOpen(true)}
+              className="shrink-0 px-3"
               title="Formulario completo"
             >
               <SlidersHorizontal className="h-4 w-4" />
-              <span className="ml-1 hidden sm:inline">Detallar</span>
             </Button>
-          </form>
+            <form onSubmit={handleQuickSubmit} className="flex gap-2 flex-1">
+              <Input
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+                placeholder='"almuerzo 1500" o "uber 2800"'
+                className="flex-1 bg-background/60"
+                disabled={loadingQuick}
+                autoComplete="off"
+                autoCorrect="off"
+              />
+              <Button type="submit" disabled={loadingQuick || !text.trim()} className="shrink-0">
+                {loadingQuick ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Plus className="h-4 w-4" />
+                )}
+              </Button>
+            </form>
+          </div>
           {feedback && (
             <p
               className={`mt-2 text-xs ${
