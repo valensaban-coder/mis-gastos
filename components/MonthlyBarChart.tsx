@@ -9,47 +9,51 @@ import {
   Tooltip,
   ResponsiveContainer,
   CartesianGrid,
+  Legend,
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { formatCurrency, MONTHS } from "@/lib/utils";
+import { formatCurrency, MONTHS, CATEGORY_LABELS, CATEGORY_COLORS } from "@/lib/utils";
 
-interface MonthlyRow {
-  month: number;
-  year: number;
-  total: number;
-  count: number;
-}
+const CATEGORIES = [
+  "comida",
+  "transporte",
+  "entretenimiento",
+  "suscripciones",
+  "combustible",
+  "salud",
+  "otros",
+] as const;
 
 interface MonthlyBarChartProps {
   year: number;
   refreshKey?: number;
 }
 
+type MonthRow = { month: number } & Record<string, number>;
+
 export function MonthlyBarChart({ year, refreshKey }: MonthlyBarChartProps) {
-  const [data, setData] = useState<MonthlyRow[]>([]);
+  const [data, setData] = useState<MonthRow[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     setLoading(true);
     fetch(`/api/expenses/monthly?year=${year}`)
       .then((r) => r.json())
-      .then((rows: MonthlyRow[]) => {
-        // Fill all 12 months, even those with 0 spend
-        const filled = Array.from({ length: 12 }, (_, i) => {
-          const found = rows.find((r) => r.month === i + 1);
-          return {
-            month: i + 1,
-            year,
-            total: found ? Number(found.total) : 0,
-            count: found?.count ?? 0,
-            name: MONTHS[i].slice(0, 3),
-          };
-        });
+      .then((rows: MonthRow[]) => {
+        const filled = rows.map((r) => ({
+          ...r,
+          name: MONTHS[r.month - 1].slice(0, 3),
+        }));
         setData(filled);
       })
       .catch(console.error)
       .finally(() => setLoading(false));
   }, [year, refreshKey]);
+
+  // Only render bars for categories that have at least one non-zero value
+  const activeCategories = CATEGORIES.filter((cat) =>
+    data.some((row) => (row[cat] ?? 0) > 0),
+  );
 
   return (
     <Card className="border-border/50">
@@ -64,8 +68,8 @@ export function MonthlyBarChart({ year, refreshKey }: MonthlyBarChartProps) {
             Cargando...
           </div>
         ) : (
-          <ResponsiveContainer width="100%" height={260}>
-            <BarChart data={data} barSize={20}>
+          <ResponsiveContainer width="100%" height={280}>
+            <BarChart data={data} barSize={18} barCategoryGap="30%">
               <CartesianGrid
                 strokeDasharray="3 3"
                 stroke="#1e293b"
@@ -93,10 +97,34 @@ export function MonthlyBarChart({ year, refreshKey }: MonthlyBarChartProps) {
                   borderRadius: "8px",
                   fontSize: "12px",
                 }}
-                formatter={(value: number) => [formatCurrency(value), "Total"]}
+                formatter={(value: number, name: string) => [
+                  formatCurrency(value),
+                  CATEGORY_LABELS[name] ?? name,
+                ]}
                 cursor={{ fill: "rgba(255,255,255,0.04)" }}
               />
-              <Bar dataKey="total" fill="#10b981" radius={[4, 4, 0, 0]} />
+              <Legend
+                iconType="circle"
+                iconSize={8}
+                formatter={(value) => (
+                  <span style={{ color: "#94a3b8", fontSize: "11px" }}>
+                    {CATEGORY_LABELS[value] ?? value}
+                  </span>
+                )}
+              />
+              {activeCategories.map((cat) => (
+                <Bar
+                  key={cat}
+                  dataKey={cat}
+                  stackId="a"
+                  fill={CATEGORY_COLORS[cat]}
+                  radius={
+                    cat === activeCategories[activeCategories.length - 1]
+                      ? [4, 4, 0, 0]
+                      : [0, 0, 0, 0]
+                  }
+                />
+              ))}
             </BarChart>
           </ResponsiveContainer>
         )}
