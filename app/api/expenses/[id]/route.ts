@@ -6,6 +6,8 @@ const VALID_CATEGORIES = [
   "transporte",
   "entretenimiento",
   "suscripciones",
+  "combustible",
+  "salud",
   "otros",
 ] as const;
 

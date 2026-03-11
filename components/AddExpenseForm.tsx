@@ -27,6 +27,8 @@ const CATEGORIES = [
   "transporte",
   "entretenimiento",
   "suscripciones",
+  "combustible",
+  "salud",
   "otros",
 ] as const;
 

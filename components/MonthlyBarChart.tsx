@@ -22,9 +22,10 @@ interface MonthlyRow {
 
 interface MonthlyBarChartProps {
   year: number;
+  refreshKey?: number;
 }
 
-export function MonthlyBarChart({ year }: MonthlyBarChartProps) {
+export function MonthlyBarChart({ year, refreshKey }: MonthlyBarChartProps) {
   const [data, setData] = useState<MonthlyRow[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -48,7 +49,7 @@ export function MonthlyBarChart({ year }: MonthlyBarChartProps) {
       })
       .catch(console.error)
       .finally(() => setLoading(false));
-  }, [year]);
+  }, [year, refreshKey]);
 
   return (
     <Card className="border-border/50">

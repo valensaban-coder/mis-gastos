@@ -14,6 +14,7 @@ export default function Dashboard() {
   const [year, setYear] = useState(now.getFullYear());
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const fetchExpenses = useCallback(async () => {
     setLoading(true);
@@ -22,6 +23,7 @@ export default function Dashboard() {
       if (!res.ok) throw new Error("fetch failed");
       const data: Expense[] = await res.json();
       setExpenses(data);
+      setRefreshKey((k) => k + 1);
     } catch (err) {
       console.error("Error fetching expenses:", err);
     } finally {
@@ -113,7 +115,7 @@ export default function Dashboard() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
           <CategoryPieChart data={categoryTotals} />
-          <MonthlyBarChart year={year} />
+          <MonthlyBarChart year={year} refreshKey={refreshKey} />
         </div>
 
         <ExpenseList

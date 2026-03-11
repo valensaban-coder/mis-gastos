@@ -3,6 +3,8 @@ export type Category =
   | "transporte"
   | "entretenimiento"
   | "suscripciones"
+  | "combustible"
+  | "salud"
   | "otros";
 
 export interface ParsedExpense {
@@ -12,6 +14,51 @@ export interface ParsedExpense {
 }
 
 const CATEGORY_KEYWORDS: Record<Category, string[]> = {
+  combustible: [
+    "nafta",
+    "carga nafta",
+    "combustible",
+    "gasoil",
+    "diesel",
+    "ypf",
+    "shell",
+    "axion",
+    "puma",
+    "full",
+    "tanque",
+  ],
+  salud: [
+    "farmacia",
+    "medicamento",
+    "medicina",
+    "doctor",
+    "médico",
+    "medico",
+    "consulta",
+    "clinica",
+    "clínica",
+    "hospital",
+    "turno",
+    "analisis",
+    "análisis",
+    "laboratorio",
+    "kinesiologia",
+    "kinesiología",
+    "psicologia",
+    "psicólogo",
+    "psicologo",
+    "odontologia",
+    "dentista",
+    "optica",
+    "óptica",
+    "obra social",
+    "prepaga",
+    "osde",
+    "swiss medical",
+    "ioma",
+    "vitaminas",
+    "suplemento",
+  ],
   comida: [
     "pizza",
     "almuerzo",
@@ -72,8 +119,6 @@ const CATEGORY_KEYWORDS: Record<Category, string[]> = {
     "bus",
     "tren",
     "remis",
-    "nafta",
-    "combustible",
     "estacionamiento",
     "parking",
     "peaje",

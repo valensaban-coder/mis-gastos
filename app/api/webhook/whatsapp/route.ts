@@ -61,6 +61,8 @@ export async function POST(request: NextRequest) {
       transporte: "🚗",
       entretenimiento: "🎬",
       suscripciones: "📱",
+      combustible: "⛽",
+      salud: "🏥",
       otros: "📦",
     };
 
