@@ -29,7 +29,7 @@ interface MonthlyBarChartProps {
   refreshKey?: number;
 }
 
-type MonthRow = { month: number } & Record<string, number>;
+type MonthRow = { month: number; name?: string } & Record<string, number>;
 
 export function MonthlyBarChart({ year, refreshKey }: MonthlyBarChartProps) {
   const [data, setData] = useState<MonthRow[]>([]);
