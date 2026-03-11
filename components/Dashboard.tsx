@@ -104,7 +104,7 @@ export default function Dashboard() {
       </header>
 
       {/* Main */}
-      <main className="max-w-5xl mx-auto px-4 py-5 space-y-5 pb-12">
+      <main className="max-w-5xl mx-auto px-3 sm:px-4 py-4 sm:py-5 space-y-4 sm:space-y-5 pb-16">
         <SummaryCards
           total={total}
           count={expenses.length}

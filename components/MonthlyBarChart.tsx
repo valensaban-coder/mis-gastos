@@ -115,9 +115,10 @@ export function MonthlyBarChart({ year, refreshKey }: MonthlyBarChartProps) {
               />
               <Legend
                 iconType="circle"
-                iconSize={8}
+                iconSize={7}
+                wrapperStyle={{ fontSize: "10px", paddingTop: "8px" }}
                 formatter={(value) => (
-                  <span style={{ color: "#94a3b8", fontSize: "11px" }}>
+                  <span style={{ color: "#94a3b8" }}>
                     {CATEGORY_LABELS[value] ?? value}
                   </span>
                 )}
