@@ -6,13 +6,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -84,6 +77,7 @@ export function ExpenseList({
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [confirmId, setConfirmId] = useState<number | null>(null);
   const [updatingId, setUpdatingId] = useState<number | null>(null);
+  const [categoryPickerId, setCategoryPickerId] = useState<number | null>(null);
 
   async function handleDelete() {
     if (confirmId === null) return;
@@ -94,6 +88,7 @@ export function ExpenseList({
   }
 
   async function handleCategoryChange(id: number, category: string) {
+    setCategoryPickerId(null);
     setUpdatingId(id);
     await onUpdateCategory(id, category);
     setUpdatingId(null);
@@ -170,42 +165,21 @@ export function ExpenseList({
                       {updatingId === expense.id ? (
                         <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
                       ) : (
-                        <Select
-                          value={expense.category}
-                          onValueChange={(v) =>
-                            handleCategoryChange(expense.id, v)
-                          }
+                        <button
+                          onClick={() => setCategoryPickerId(expense.id)}
+                          className="focus:outline-none"
                         >
-                          <SelectTrigger className="h-6 w-auto max-w-full gap-1 border-0 bg-transparent p-0 focus:ring-0 focus:ring-offset-0">
-                            <SelectValue>
-                              <Badge
-                                variant="outline"
-                                style={{
-                                  color: CATEGORY_COLORS[expense.category],
-                                  borderColor:
-                                    CATEGORY_COLORS[expense.category] + "50",
-                                }}
-                                className="text-[11px] font-normal px-1.5 py-0 whitespace-nowrap"
-                              >
-                                {CATEGORY_LABELS[expense.category] ??
-                                  expense.category}
-                              </Badge>
-                            </SelectValue>
-                          </SelectTrigger>
-                          <SelectContent className="min-w-[160px]">
-                            {CATEGORIES.map((cat) => (
-                              <SelectItem key={cat} value={cat}>
-                                <span className="flex items-center gap-2">
-                                  <span
-                                    className="inline-block w-2 h-2 rounded-full shrink-0"
-                                    style={{ background: CATEGORY_COLORS[cat] }}
-                                  />
-                                  {CATEGORY_LABELS[cat]}
-                                </span>
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                          <Badge
+                            variant="outline"
+                            style={{
+                              color: CATEGORY_COLORS[expense.category],
+                              borderColor: CATEGORY_COLORS[expense.category] + "50",
+                            }}
+                            className="text-[11px] font-normal px-1.5 py-0 whitespace-nowrap cursor-pointer hover:opacity-80 transition-opacity"
+                          >
+                            {CATEGORY_LABELS[expense.category] ?? expense.category}
+                          </Badge>
+                        </button>
                       )}
                     </div>
 
@@ -229,6 +203,31 @@ export function ExpenseList({
           )}
         </CardContent>
       </Card>
+
+      {/* Category picker dialog */}
+      <Dialog open={categoryPickerId !== null} onOpenChange={() => setCategoryPickerId(null)}>
+        <DialogContent className="max-w-sm w-[calc(100vw-2rem)] mx-auto">
+          <DialogHeader>
+            <DialogTitle>Cambiar categoría</DialogTitle>
+          </DialogHeader>
+          <div className="grid grid-cols-2 gap-2 pt-1">
+            {CATEGORIES.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => categoryPickerId !== null && handleCategoryChange(categoryPickerId, cat)}
+                className="flex items-center gap-2.5 rounded-lg border border-border px-3 py-2.5 text-sm font-medium hover:bg-muted/60 transition-colors text-left"
+                style={{ borderLeftColor: CATEGORY_COLORS[cat], borderLeftWidth: 3 }}
+              >
+                <span
+                  className="w-2.5 h-2.5 rounded-full shrink-0"
+                  style={{ background: CATEGORY_COLORS[cat] }}
+                />
+                {CATEGORY_LABELS[cat]}
+              </button>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={confirmId !== null} onOpenChange={() => setConfirmId(null)}>
         <DialogContent className="max-w-sm mx-4">

@@ -13,13 +13,6 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { CATEGORY_LABELS, CATEGORY_COLORS } from "@/lib/utils";
 
 const CATEGORIES = [
@@ -187,31 +180,30 @@ export function AddExpenseForm({ onAdd, onAddManual }: AddExpenseFormProps) {
 
             <div className="space-y-1.5">
               <Label>Categoría</Label>
-              <Select
-                value={form.category}
-                onValueChange={(v) => setForm((f) => ({ ...f, category: v }))}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent
-                  className="z-50 max-h-64 overflow-y-auto"
-                  position="popper"
-                  sideOffset={4}
-                >
-                  {CATEGORIES.map((cat) => (
-                    <SelectItem key={cat} value={cat}>
-                      <span className="flex items-center gap-2">
-                        <span
-                          className="inline-block w-2 h-2 rounded-full shrink-0"
-                          style={{ background: CATEGORY_COLORS[cat] }}
-                        />
-                        {CATEGORY_LABELS[cat]}
-                      </span>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="grid grid-cols-3 gap-1.5">
+                {CATEGORIES.map((cat) => {
+                  const selected = form.category === cat;
+                  return (
+                    <button
+                      key={cat}
+                      type="button"
+                      onClick={() => setForm((f) => ({ ...f, category: cat }))}
+                      className="flex items-center gap-1.5 rounded-md border px-2 py-1.5 text-xs font-medium transition-colors text-left"
+                      style={{
+                        borderColor: selected ? CATEGORY_COLORS[cat] : undefined,
+                        backgroundColor: selected ? CATEGORY_COLORS[cat] + "20" : undefined,
+                        color: selected ? CATEGORY_COLORS[cat] : undefined,
+                      }}
+                    >
+                      <span
+                        className="w-2 h-2 rounded-full shrink-0"
+                        style={{ background: CATEGORY_COLORS[cat] }}
+                      />
+                      {CATEGORY_LABELS[cat]}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
             <div className="space-y-1.5">
