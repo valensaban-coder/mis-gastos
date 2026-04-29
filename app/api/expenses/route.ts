@@ -4,6 +4,11 @@ import { authOptions } from "@/lib/auth";
 import sql from "@/lib/db";
 import { parseExpenseText } from "@/lib/parser";
 
+const VALID_CATEGORIES = new Set([
+  "comida","transporte","entretenimiento","suscripciones",
+  "combustible","salud","ropa","regalos","hogar","viajes","otros",
+]);
+
 async function getUserEmail(): Promise<string | null> {
   const session = await getServerSession(authOptions);
   return session?.user?.email ?? null;
@@ -63,6 +68,10 @@ export async function POST(request: NextRequest) {
           { error: "Descripción y monto son requeridos" },
           { status: 400 },
         );
+      }
+
+      if (!VALID_CATEGORIES.has(category)) {
+        return NextResponse.json({ error: "Categoría inválida" }, { status: 400 });
       }
 
       const [expense] = date

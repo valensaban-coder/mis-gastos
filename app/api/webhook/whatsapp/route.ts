@@ -1,7 +1,34 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createHmac, timingSafeEqual } from "crypto";
 import sql from "@/lib/db";
 import { parseExpenseText } from "@/lib/parser";
 import { sendWhatsAppMessage } from "@/lib/whatsapp";
+
+const CATEGORY_EMOJI: Record<string, string> = {
+  comida: "🍕",
+  transporte: "🚗",
+  entretenimiento: "🎬",
+  suscripciones: "📱",
+  combustible: "⛽",
+  salud: "🏥",
+  ropa: "👕",
+  regalos: "🎁",
+  hogar: "🏠",
+  viajes: "✈️",
+  otros: "📦",
+};
+
+// Verify Meta's X-Hub-Signature-256 header
+function verifySignature(rawBody: string, signature: string | null): boolean {
+  const secret = process.env.WHATSAPP_TOKEN;
+  if (!secret || !signature) return false;
+  const expected = "sha256=" + createHmac("sha256", secret).update(rawBody).digest("hex");
+  try {
+    return timingSafeEqual(Buffer.from(expected), Buffer.from(signature));
+  } catch {
+    return false;
+  }
+}
 
 // GET — Meta webhook verification handshake
 export async function GET(request: NextRequest) {
@@ -27,13 +54,17 @@ export async function GET(request: NextRequest) {
 // POST — Receive incoming WhatsApp messages
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
+    const rawBody = await request.text();
+    const signature = request.headers.get("x-hub-signature-256");
 
-    // Navigate the Meta webhook payload structure
-    const message =
-      body?.entry?.[0]?.changes?.[0]?.value?.messages?.[0];
+    if (!verifySignature(rawBody, signature)) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
-    // Ignore non-text messages (images, audio, etc.)
+    const body = JSON.parse(rawBody);
+
+    const message = body?.entry?.[0]?.changes?.[0]?.value?.messages?.[0];
+
     if (!message || message.type !== "text") {
       return NextResponse.json({ status: "ignored" });
     }
@@ -51,20 +82,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ status: "parse_error" });
     }
 
-    await sql`
-      INSERT INTO expenses (description, amount, category, source)
-      VALUES (${parsed.description}, ${parsed.amount}, ${parsed.category}, 'whatsapp')
-    `;
+    // Associate expense with the user matching this WhatsApp number
+    const [userRow] = await sql`
+      SELECT DISTINCT user_email FROM expenses
+      WHERE whatsapp_phone = ${from}
+      LIMIT 1
+    `.catch(() => [null]);
 
-    const CATEGORY_EMOJI: Record<string, string> = {
-      comida: "🍕",
-      transporte: "🚗",
-      entretenimiento: "🎬",
-      suscripciones: "📱",
-      combustible: "⛽",
-      salud: "🏥",
-      otros: "📦",
-    };
+    const userEmail = userRow?.user_email ?? from;
+
+    await sql`
+      INSERT INTO expenses (description, amount, category, source, user_email)
+      VALUES (${parsed.description}, ${parsed.amount}, ${parsed.category}, 'whatsapp', ${userEmail})
+    `;
 
     const emoji = CATEGORY_EMOJI[parsed.category] ?? "📦";
     const amountFormatted = new Intl.NumberFormat("es-AR").format(parsed.amount);
@@ -76,8 +106,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ status: "ok" });
   } catch (error) {
-    console.error("POST /api/webhook/whatsapp error:", error);
-    // Return 200 to Meta to prevent retries
+    console.error("POST /api/webhook/whatsapp error:", error instanceof Error ? error.message : "unknown");
     return NextResponse.json({ status: "error" }, { status: 200 });
   }
 }
