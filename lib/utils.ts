@@ -21,6 +21,10 @@ export const CATEGORY_LABELS: Record<string, string> = {
   suscripciones: "Suscripciones",
   combustible: "Combustible",
   salud: "Salud",
+  ropa: "Ropa",
+  regalos: "Regalos",
+  hogar: "Hogar",
+  viajes: "Viajes",
   otros: "Otros",
 };
 
@@ -31,6 +35,10 @@ export const CATEGORY_COLORS: Record<string, string> = {
   suscripciones: "#8b5cf6",
   combustible: "#f97316",
   salud: "#ec4899",
+  ropa: "#f43f5e",
+  regalos: "#d946ef",
+  hogar: "#84cc16",
+  viajes: "#06b6d4",
   otros: "#6b7280",
 };
 

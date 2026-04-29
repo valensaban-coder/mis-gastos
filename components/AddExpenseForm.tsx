@@ -20,7 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { CATEGORY_LABELS } from "@/lib/utils";
+import { CATEGORY_LABELS, CATEGORY_COLORS } from "@/lib/utils";
 
 const CATEGORIES = [
   "comida",
@@ -29,6 +29,10 @@ const CATEGORIES = [
   "suscripciones",
   "combustible",
   "salud",
+  "ropa",
+  "regalos",
+  "hogar",
+  "viajes",
   "otros",
 ] as const;
 
@@ -49,7 +53,6 @@ function todayISO() {
 }
 
 export function AddExpenseForm({ onAdd, onAddManual }: AddExpenseFormProps) {
-  // Quick input state
   const [text, setText] = useState("");
   const [loadingQuick, setLoadingQuick] = useState(false);
   const [feedback, setFeedback] = useState<{
@@ -57,7 +60,6 @@ export function AddExpenseForm({ onAdd, onAddManual }: AddExpenseFormProps) {
     message: string;
   } | null>(null);
 
-  // Manual form state
   const [open, setOpen] = useState(false);
   const [loadingManual, setLoadingManual] = useState(false);
   const [form, setForm] = useState<ManualExpense>({
@@ -72,7 +74,6 @@ export function AddExpenseForm({ onAdd, onAddManual }: AddExpenseFormProps) {
     setTimeout(() => setFeedback(null), 3000);
   }
 
-  // Quick text submit
   async function handleQuickSubmit(e: FormEvent) {
     e.preventDefault();
     if (!text.trim() || loadingQuick) return;
@@ -87,7 +88,6 @@ export function AddExpenseForm({ onAdd, onAddManual }: AddExpenseFormProps) {
     setLoadingQuick(false);
   }
 
-  // Manual form submit
   async function handleManualSubmit(e: FormEvent) {
     e.preventDefault();
     if (!form.description.trim() || form.amount <= 0 || loadingManual) return;
@@ -139,7 +139,7 @@ export function AddExpenseForm({ onAdd, onAddManual }: AddExpenseFormProps) {
           {feedback && (
             <p
               className={`mt-2 text-xs ${
-                feedback.type === "success" ? "text-emerald-400" : "text-red-400"
+                feedback.type === "success" ? "text-emerald-500" : "text-red-400"
               }`}
             >
               {feedback.message}
@@ -148,9 +148,8 @@ export function AddExpenseForm({ onAdd, onAddManual }: AddExpenseFormProps) {
         </CardContent>
       </Card>
 
-      {/* Manual form dialog */}
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-sm">
+        <DialogContent className="max-w-sm w-[calc(100vw-2rem)] mx-auto">
           <DialogHeader>
             <DialogTitle>Agregar gasto</DialogTitle>
           </DialogHeader>
@@ -195,10 +194,20 @@ export function AddExpenseForm({ onAdd, onAddManual }: AddExpenseFormProps) {
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent
+                  className="z-50 max-h-64 overflow-y-auto"
+                  position="popper"
+                  sideOffset={4}
+                >
                   {CATEGORIES.map((cat) => (
                     <SelectItem key={cat} value={cat}>
-                      {CATEGORY_LABELS[cat]}
+                      <span className="flex items-center gap-2">
+                        <span
+                          className="inline-block w-2 h-2 rounded-full shrink-0"
+                          style={{ background: CATEGORY_COLORS[cat] }}
+                        />
+                        {CATEGORY_LABELS[cat]}
+                      </span>
                     </SelectItem>
                   ))}
                 </SelectContent>

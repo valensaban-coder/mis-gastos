@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Trash2, MessageCircle, Globe, Loader2 } from "lucide-react";
+import { Trash2, MessageCircle, Globe, Loader2, Download } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -46,12 +46,33 @@ const CATEGORIES = [
   "suscripciones",
   "combustible",
   "salud",
+  "ropa",
+  "regalos",
+  "hogar",
+  "viajes",
   "otros",
 ] as const;
 
 function formatDate(dateStr: string) {
   const d = new Date(dateStr + "T12:00:00");
   return d.toLocaleDateString("es-AR", { day: "2-digit", month: "short" });
+}
+
+function downloadCSV(expenses: Expense[]) {
+  const header = "Fecha,Descripción,Monto,Categoría,Origen";
+  const rows = expenses.map((e) => {
+    const desc = `"${e.description.replace(/"/g, '""')}"`;
+    const cat = CATEGORY_LABELS[e.category] ?? e.category;
+    return `${e.date},${desc},${Number(e.amount)},${cat},${e.source}`;
+  });
+  const csv = [header, ...rows].join("\n");
+  const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `gastos-${new Date().toISOString().slice(0, 7)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 export function ExpenseList({
@@ -84,9 +105,22 @@ export function ExpenseList({
         <CardHeader className="pb-3 px-4">
           <CardTitle className="text-base font-medium flex items-center justify-between">
             <span>Gastos del mes</span>
-            <span className="text-xs font-normal text-muted-foreground">
-              {expenses.length} registros
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-normal text-muted-foreground">
+                {expenses.length} registros
+              </span>
+              {expenses.length > 0 && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                  onClick={() => downloadCSV(expenses)}
+                  title="Descargar CSV"
+                >
+                  <Download className="h-3.5 w-3.5" />
+                </Button>
+              )}
+            </div>
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
@@ -107,7 +141,7 @@ export function ExpenseList({
               {expenses.map((expense) => (
                 <div
                   key={expense.id}
-                  className="px-4 py-3 hover:bg-white/[0.02] transition-colors"
+                  className="px-4 py-3 hover:bg-muted/30 transition-colors"
                 >
                   {/* Row 1: source icon + description + amount */}
                   <div className="flex items-center gap-2">
@@ -121,7 +155,7 @@ export function ExpenseList({
                     <span className="flex-1 text-sm font-medium truncate">
                       {expense.description}
                     </span>
-                    <span className="text-sm font-bold text-emerald-400 shrink-0">
+                    <span className="text-sm font-bold text-emerald-500 shrink-0">
                       {formatCurrency(Number(expense.amount))}
                     </span>
                   </div>
@@ -132,7 +166,7 @@ export function ExpenseList({
                       {formatDate(expense.date)}
                     </span>
 
-                    <div className="flex-1">
+                    <div className="flex-1 min-w-0">
                       {updatingId === expense.id ? (
                         <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
                       ) : (
@@ -142,7 +176,7 @@ export function ExpenseList({
                             handleCategoryChange(expense.id, v)
                           }
                         >
-                          <SelectTrigger className="h-6 w-auto gap-1 border-0 bg-transparent p-0 focus:ring-0 focus:ring-offset-0">
+                          <SelectTrigger className="h-6 w-auto max-w-full gap-1 border-0 bg-transparent p-0 focus:ring-0 focus:ring-offset-0">
                             <SelectValue>
                               <Badge
                                 variant="outline"
@@ -151,17 +185,23 @@ export function ExpenseList({
                                   borderColor:
                                     CATEGORY_COLORS[expense.category] + "50",
                                 }}
-                                className="text-[11px] font-normal px-1.5 py-0"
+                                className="text-[11px] font-normal px-1.5 py-0 whitespace-nowrap"
                               >
                                 {CATEGORY_LABELS[expense.category] ??
                                   expense.category}
                               </Badge>
                             </SelectValue>
                           </SelectTrigger>
-                          <SelectContent>
+                          <SelectContent className="min-w-[160px]">
                             {CATEGORIES.map((cat) => (
                               <SelectItem key={cat} value={cat}>
-                                {CATEGORY_LABELS[cat]}
+                                <span className="flex items-center gap-2">
+                                  <span
+                                    className="inline-block w-2 h-2 rounded-full shrink-0"
+                                    style={{ background: CATEGORY_COLORS[cat] }}
+                                  />
+                                  {CATEGORY_LABELS[cat]}
+                                </span>
                               </SelectItem>
                             ))}
                           </SelectContent>

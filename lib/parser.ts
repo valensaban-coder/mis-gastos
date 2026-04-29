@@ -5,6 +5,10 @@ export type Category =
   | "suscripciones"
   | "combustible"
   | "salud"
+  | "ropa"
+  | "regalos"
+  | "hogar"
+  | "viajes"
   | "otros";
 
 export interface ParsedExpense {
@@ -58,6 +62,97 @@ const CATEGORY_KEYWORDS: Record<Category, string[]> = {
     "ioma",
     "vitaminas",
     "suplemento",
+  ],
+  ropa: [
+    "ropa",
+    "remera",
+    "pantalon",
+    "pantalón",
+    "zapatilla",
+    "zapatillas",
+    "zapato",
+    "zapatos",
+    "camisa",
+    "vestido",
+    "jean",
+    "jeans",
+    "buzo",
+    "campera",
+    "remerera",
+    "calzado",
+    "zara",
+    "h&m",
+    "nike",
+    "adidas",
+    "indumentaria",
+    "medias",
+    "ropa interior",
+    "bikini",
+    "traje de baño",
+    "abrigo",
+    "piloto",
+  ],
+  regalos: [
+    "regalo",
+    "regalos",
+    "cumpleaños",
+    "cumple",
+    "presente",
+    "flores",
+    "chocolates",
+    "tarjeta",
+    "canasta",
+    "sorpresa",
+  ],
+  hogar: [
+    "alquiler",
+    "expensas",
+    "luz",
+    "agua",
+    "gas",
+    "internet",
+    "wifi",
+    "cable",
+    "telefono fijo",
+    "limpieza",
+    "mueble",
+    "electrodomestico",
+    "electrodoméstico",
+    "heladera",
+    "lavarropas",
+    "microondas",
+    "television",
+    "televisión",
+    "tele",
+    "ferreteria",
+    "ferretería",
+    "pintura",
+    "plomero",
+    "electricista",
+    "hogar",
+    "casa",
+    "depto",
+    "departamento",
+  ],
+  viajes: [
+    "hotel",
+    "hostel",
+    "airbnb",
+    "vuelo",
+    "avion",
+    "avión",
+    "aeropuerto",
+    "pasaje",
+    "excursion",
+    "excursión",
+    "vacaciones",
+    "viaje",
+    "turismo",
+    "tour",
+    "crucero",
+    "valija",
+    "equipaje",
+    "visa",
   ],
   comida: [
     "pizza",
@@ -126,14 +221,9 @@ const CATEGORY_KEYWORDS: Record<Category, string[]> = {
     "moto",
     "bicicleta",
     "ecobici",
-    "aeropuerto",
-    "vuelo",
-    "avion",
-    "avión",
     "transfer",
-    "viaje",
-    "viático",
     "viatico",
+    "viático",
   ],
   entretenimiento: [
     "cine",
@@ -184,17 +274,7 @@ const CATEGORY_KEYWORDS: Record<Category, string[]> = {
     "twitch",
     "gym",
     "gimnasio",
-    "internet",
-    "wifi",
-    "luz",
-    "agua",
-    "gas",
-    "telefono",
-    "teléfono",
-    "celular",
     "seguro",
-    "alquiler",
-    "expensas",
     "suscripcion",
     "suscripción",
     "cuota",
@@ -206,24 +286,18 @@ const CATEGORY_KEYWORDS: Record<Category, string[]> = {
   otros: [],
 };
 
-/**
- * Parses free-text expense input like "almuerzo 1500" or "uber 2800 centro"
- * Returns null if no valid amount is found.
- */
 export function parseExpenseText(text: string): ParsedExpense | null {
   const trimmed = text.trim();
   if (!trimmed) return null;
 
   const normalized = trimmed.toLowerCase();
 
-  // Extract the first number (supports integers and decimals with . or ,)
   const amountMatch = normalized.match(/\b(\d{1,10}(?:[.,]\d{1,2})?)\b/);
   if (!amountMatch) return null;
 
   const amount = parseFloat(amountMatch[1].replace(",", "."));
   if (isNaN(amount) || amount <= 0 || amount > 9_999_999) return null;
 
-  // Description: remove the matched number from the original text
   const description =
     trimmed
       .replace(amountMatch[0], "")
@@ -232,7 +306,6 @@ export function parseExpenseText(text: string): ParsedExpense | null {
       .replace(/^[-–—,]+|[-–—,]+$/g, "")
       .trim() || trimmed;
 
-  // Detect category by scanning keywords
   let category: Category = "otros";
   for (const [cat, keywords] of Object.entries(CATEGORY_KEYWORDS) as [
     Category,

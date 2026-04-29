@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import sql from "@/lib/db";
 
 const VALID_CATEGORIES = [
@@ -8,13 +10,25 @@ const VALID_CATEGORIES = [
   "suscripciones",
   "combustible",
   "salud",
+  "ropa",
+  "regalos",
+  "hogar",
+  "viajes",
   "otros",
 ] as const;
+
+async function getUserEmail(): Promise<string | null> {
+  const session = await getServerSession(authOptions);
+  return session?.user?.email ?? null;
+}
 
 export async function PATCH(
   request: NextRequest,
   { params }: { params: { id: string } },
 ) {
+  const email = await getUserEmail();
+  if (!email) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+
   const id = parseInt(params.id, 10);
   if (isNaN(id)) {
     return NextResponse.json({ error: "ID inválido" }, { status: 400 });
@@ -31,7 +45,7 @@ export async function PATCH(
     const [expense] = await sql`
       UPDATE expenses
       SET category = ${category}
-      WHERE id = ${id}
+      WHERE id = ${id} AND user_email = ${email}
       RETURNING *
     `;
 
@@ -50,6 +64,9 @@ export async function DELETE(
   _request: NextRequest,
   { params }: { params: { id: string } },
 ) {
+  const email = await getUserEmail();
+  if (!email) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+
   const id = parseInt(params.id, 10);
   if (isNaN(id)) {
     return NextResponse.json({ error: "ID inválido" }, { status: 400 });
@@ -57,7 +74,7 @@ export async function DELETE(
 
   try {
     const [deleted] = await sql`
-      DELETE FROM expenses WHERE id = ${id} RETURNING id
+      DELETE FROM expenses WHERE id = ${id} AND user_email = ${email} RETURNING id
     `;
 
     if (!deleted) {

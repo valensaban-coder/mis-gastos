@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import sql from "@/lib/db";
 
 const CATEGORIES = [
@@ -8,10 +10,18 @@ const CATEGORIES = [
   "suscripciones",
   "combustible",
   "salud",
+  "ropa",
+  "regalos",
+  "hogar",
+  "viajes",
   "otros",
 ] as const;
 
 export async function GET(request: NextRequest) {
+  const session = await getServerSession(authOptions);
+  const email = session?.user?.email;
+  if (!email) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+
   const { searchParams } = new URL(request.url);
   const year = searchParams.get("year") ?? new Date().getFullYear().toString();
 
@@ -22,19 +32,18 @@ export async function GET(request: NextRequest) {
         category,
         SUM(amount)::float            AS total
       FROM expenses
-      WHERE EXTRACT(YEAR FROM date) = ${parseInt(year)}
+      WHERE user_email = ${email}
+        AND EXTRACT(YEAR FROM date) = ${parseInt(year)}
       GROUP BY month, category
       ORDER BY month ASC
     `;
 
-    // Pivot: one object per month with a key per category
     const byMonth: Record<number, Record<string, number>> = {};
     for (const row of rows) {
       if (!byMonth[row.month]) byMonth[row.month] = {};
       byMonth[row.month][row.category] = Number(row.total);
     }
 
-    // Fill all 12 months
     const result = Array.from({ length: 12 }, (_, i) => {
       const month = i + 1;
       const cats = byMonth[month] ?? {};

@@ -1,8 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import sql from "@/lib/db";
 import { parseExpenseText } from "@/lib/parser";
 
+async function getUserEmail(): Promise<string | null> {
+  const session = await getServerSession(authOptions);
+  return session?.user?.email ?? null;
+}
+
 export async function GET(request: NextRequest) {
+  const email = await getUserEmail();
+  if (!email) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+
   const { searchParams } = new URL(request.url);
   const month = searchParams.get("month");
   const year = searchParams.get("year");
@@ -12,12 +22,14 @@ export async function GET(request: NextRequest) {
       month && year
         ? await sql`
             SELECT * FROM expenses
-            WHERE EXTRACT(MONTH FROM date) = ${parseInt(month)}
+            WHERE user_email = ${email}
+              AND EXTRACT(MONTH FROM date) = ${parseInt(month)}
               AND EXTRACT(YEAR  FROM date) = ${parseInt(year)}
             ORDER BY date DESC, created_at DESC
           `
         : await sql`
             SELECT * FROM expenses
+            WHERE user_email = ${email}
             ORDER BY date DESC, created_at DESC
             LIMIT 200
           `;
@@ -30,6 +42,9 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const email = await getUserEmail();
+  if (!email) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+
   try {
     const body = await request.json();
 
@@ -52,13 +67,13 @@ export async function POST(request: NextRequest) {
 
       const [expense] = date
         ? await sql`
-            INSERT INTO expenses (description, amount, category, date, source)
-            VALUES (${description.trim()}, ${amount}, ${category}, ${date}, ${source})
+            INSERT INTO expenses (description, amount, category, date, source, user_email)
+            VALUES (${description.trim()}, ${amount}, ${category}, ${date}, ${source}, ${email})
             RETURNING *
           `
         : await sql`
-            INSERT INTO expenses (description, amount, category, source)
-            VALUES (${description.trim()}, ${amount}, ${category}, ${source})
+            INSERT INTO expenses (description, amount, category, source, user_email)
+            VALUES (${description.trim()}, ${amount}, ${category}, ${source}, ${email})
             RETURNING *
           `;
 
@@ -87,8 +102,8 @@ export async function POST(request: NextRequest) {
     }
 
     const [expense] = await sql`
-      INSERT INTO expenses (description, amount, category, source)
-      VALUES (${parsed.description}, ${parsed.amount}, ${parsed.category}, ${source})
+      INSERT INTO expenses (description, amount, category, source, user_email)
+      VALUES (${parsed.description}, ${parsed.amount}, ${parsed.category}, ${source}, ${email})
       RETURNING *
     `;
 
